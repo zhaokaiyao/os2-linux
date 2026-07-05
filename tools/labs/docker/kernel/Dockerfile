@@ -2,11 +2,13 @@ FROM ubuntu:20.04
 
 RUN apt-get update
 RUN apt-get install -y software-properties-common
-RUN apt-get install -y gcc-multilib
+RUN apt-get install -y gcc-i686-linux-gnu
 RUN apt-get install -y libncurses5-dev
 RUN apt-get install -y bc
 RUN apt-get install -y qemu-system-x86
 RUN apt-get install -y qemu-system-arm
+RUN apt-get install -y qemu-user
+RUN apt-get install -y qemu-utils
 RUN apt-get install -y python3
 RUN apt-get install -y minicom
 RUN apt-get install -y git
@@ -25,6 +27,7 @@ RUN apt-get install -y bison
 RUN apt-get install -y flex
 RUN apt-get install -y gdb
 RUN apt-get install -y asciinema
+RUN apt-get install -y kmod
 
 RUN apt-get install -y libssl-dev
 RUN apt-get install -y git ninja-build pkg-config libglib2.0-dev libpixman-1-dev
@@ -39,7 +42,7 @@ RUN rm -rf /var/lib/apt/lists/*
 ARG ARG_UID
 ARG ARG_GID
 
-RUN groupadd -g $ARG_GID ubuntu
+RUN getent group $ARG_GID || groupadd -g $ARG_GID ubuntu
 RUN useradd -u $ARG_UID -g $ARG_GID -ms /bin/bash ubuntu && adduser ubuntu sudo && echo -n 'ubuntu:ubuntu' | chpasswd
 
 # Enable passwordless sudo for users under the "sudo" group

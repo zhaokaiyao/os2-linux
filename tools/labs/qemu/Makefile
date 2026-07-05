@@ -5,10 +5,12 @@ b = b
 endif
 
 ZIMAGE = $(KDIR)/arch/$(ARCH)/boot/$(b)zImage
+
 KCONFIG = $(KDIR)/.config
 NTTCP = $(KDIR)/tools/labs/templates/assignments/6-e100/nttcp
+NTTCP_RUNNER = $(shell if [ "$$(uname -m)" = "aarch64" ]; then printf 'qemu-i386 '; fi)
 
-YOCTO_URL = http://downloads.yoctoproject.org/releases/yocto/yocto-2.3/machines/qemu/qemu$(ARCH)/
+YOCTO_URL ?= https://downloads.yoctoproject.org/releases/yocto/yocto-4.0/machines/qemu/qemu$(ARCH)
 YOCTO_IMAGE = core-image-minimal-qemu$(ARCH).ext4
 #YOCTO_IMAGE = core-image-minimal-dev-qemu$(ARCH).ext4
 #YOCTO_IMAGE = core-image-sato-dev-qemu$(ARCH).ext4
@@ -39,19 +41,19 @@ TEMPDIR := $(shell mktemp -u)
 
 $(KCONFIG): qemu/kernel_config.x86
 	cp $^ $@
-	$(MAKE) -C $(KDIR) olddefconfig
-	$(MAKE) -C $(KDIR) mod2yesconfig
+	$(MAKE) -C $(KDIR) ARCH=$(ARCH) CROSS_COMPILE=$(CROSS_COMPILE) olddefconfig
+	$(MAKE) -C $(KDIR) ARCH=$(ARCH) CROSS_COMPILE=$(CROSS_COMPILE) mod2yesconfig
 
 zImage: $(ZIMAGE)
 
 $(ZIMAGE): $(KCONFIG)
-	$(MAKE) -C $(KDIR)
-	$(MAKE) -C $(KDIR) modules
+	$(MAKE) -C $(KDIR) ARCH=$(ARCH) CROSS_COMPILE=$(CROSS_COMPILE)
+	$(MAKE) -C $(KDIR) ARCH=$(ARCH) CROSS_COMPILE=$(CROSS_COMPILE) modules
 
 .modinst: $(ZIMAGE) $(YOCTO_IMAGE)
 	mkdir $(TEMPDIR)
 	sudo mount -t ext4 -o loop $(YOCTO_IMAGE) $(TEMPDIR)
-	sudo $(MAKE) -C $(KDIR) modules_install INSTALL_MOD_PATH=$(TEMPDIR)
+	sudo $(MAKE) -C $(KDIR) ARCH=$(ARCH) CROSS_COMPILE=$(CROSS_COMPILE) modules_install INSTALL_MOD_PATH=$(TEMPDIR)
 	sudo umount $(TEMPDIR)
 	rmdir $(TEMPDIR)
 	sleep 1 && touch .modinst
@@ -74,7 +76,7 @@ lkt-tap-smbd:
 
 
 nttcp-run: $(NTTCP) lkt-tap1
-	$(NTTCP) -v -i &
+	$(NTTCP_RUNNER)$(NTTCP) -v -i &
 
 pipe1.in:
 	mkfifo $@
