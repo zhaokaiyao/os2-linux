@@ -1,5 +1,6 @@
 FROM ubuntu:20.04
 
+RUN sed -i.bak 's|http://ports.ubuntu.com|http://mirrors.aliyun.com|g' /etc/apt/sources.list
 RUN apt-get update
 RUN apt-get install -y software-properties-common
 RUN apt-get install -y gcc-i686-linux-gnu
