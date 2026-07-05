@@ -4,6 +4,7 @@ ifeq ($(ARCH),x86)
 b = b
 endif
 
+HOST_ARCH := $(shell uname -m)
 ZIMAGE = $(KDIR)/arch/$(ARCH)/boot/$(b)zImage
 
 KCONFIG = $(KDIR)/.config
@@ -59,7 +60,11 @@ $(ZIMAGE): $(KCONFIG)
 	sleep 1 && touch .modinst
 
 gdb: $(ZIMAGE)
+ifneq ($(ARCH), $(HOST_ARCH))
+	gdb-multiarch -ex "target remote localhost:1234" $(KDIR)/vmlinux
+else
 	gdb -ex "target remote localhost:1234" $(KDIR)/vmlinux
+endif
 
 $(YOCTO_IMAGE):
 	wget $(YOCTO_URL)/$(YOCTO_IMAGE)
